@@ -1,0 +1,45 @@
+version: "v1"
+
+# 阶段1只使用名称、别名、物理类型和来源；指标公式在阶段2定义和校验。
+entities:
+  - id: customer
+    name: 客户
+    aliases: [customer, customer_id, 客户编号]
+    allowed_types: [string, integer]
+    description: 客户或客户编号
+
+dimensions:
+  - id: branch
+    name: 分支机构
+    aliases: [branch, branch_name, 机构, 支行, 门店]
+    allowed_types: [string]
+  - id: date
+    name: 日期
+    aliases: [date, transaction_date, 交易日期, 时间]
+    allowed_types: [datetime, string]
+
+metrics:
+  - id: amount
+    name: 金额
+    aliases: [amount, sales_amount, revenue, 金额, 销售额, 收入, 营业额]
+    allowed_types: [integer, decimal, number]
+    unit: 元
+    aggregation: sum
+    source_refs: [golden:time_range_aggregation, golden:grouped_metric]
+  - id: count
+    name: 数量
+    aliases: [count, quantity, orders, 数量, 笔数, 订单数]
+    allowed_types: [integer, decimal, number]
+    unit: 笔
+    aggregation: sum
+    source_refs: [golden:grouped_metric]
+
+relationships: []
+
+verified_questions:
+  - id: grouped_metric
+    question: 按机构汇总金额或数量
+    expected_intent: group
+  - id: time_range_aggregation
+    question: 在时间范围内汇总金额
+    expected_intent: aggregate

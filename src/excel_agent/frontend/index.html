@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SmartQuery 智能问数助手，可信上传式分析工作台">
+  <title>SmartQuery · 智能问数助手</title>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">S</div>
+        <div>
+          <h1>智能问数助手</h1>
+          <p>SmartQuery · 可信上传式分析工作台</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <span id="service-status" class="status-pill status-muted">正在检查服务</span>
+      </div>
+    </header>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <main class="workbench-grid">
+      <aside class="panel left-panel" aria-label="任务与数据集">
+        <section class="panel-section task-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">工作空间</span>
+              <h2>任务</h2>
+            </div>
+          </div>
+          <button id="create-task" class="button button-primary task-create-button" type="button"><span aria-hidden="true">＋</span>新建任务</button>
+          <div id="task-list" class="task-list" role="list" aria-label="任务列表">
+            <div class="empty-state compact">尚未创建任务</div>
+          </div>
+          <div class="task-controls">
+            <label class="sr-only" for="task-name">任务名称</label>
+            <input id="task-name" type="text" maxlength="100" placeholder="任务名称（可选）">
+            <button id="delete-task" class="button button-danger button-small" type="button" disabled>删除</button>
+          </div>
+        </section>
+
+        <section class="panel-section dataset-section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">当前任务</span>
+              <h2>数据集</h2>
+            </div>
+            <label id="upload-label" class="button button-secondary button-small disabled" for="dataset-upload">上传</label>
+            <input id="dataset-upload" class="sr-only" type="file" accept=".xlsx,.csv">
+          </div>
+          <div id="upload-progress" class="upload-progress hidden" aria-live="polite"></div>
+          <div id="dataset-list" class="dataset-list" role="list" aria-label="数据集列表">
+            <div class="empty-state compact">创建任务后上传数据</div>
+          </div>
+          <div id="inspection-card" class="inspection-card hidden"></div>
+        </section>
+
+        <section class="panel-section dataset-summary-section">
+          <div class="section-heading"><h2>当前数据集</h2></div>
+          <div id="dataset-summary" class="summary-card empty-state compact">请选择一个可用数据集</div>
+          <div id="dataset-preview" class="preview-table-wrap hidden"></div>
+        </section>
+      </aside>
+
+      <section class="panel center-panel" aria-label="智能问数对话">
+        <div class="conversation-header">
+          <div>
+            <span class="eyebrow">问数助手</span>
+            <h2 id="conversation-title">请先创建任务</h2>
+            <p id="conversation-context" class="muted">上传并完成语义绑定后，可以用业务语言提问。</p>
+          </div>
+          <div id="analysis-stage" class="analysis-stage status-muted">空闲</div>
+        </div>
+        <div id="conversation" class="conversation" role="log" aria-live="polite" aria-label="对话记录">
+          <div id="chat-empty" class="empty-state large">
+            <div class="empty-icon" aria-hidden="true">⌁</div>
+            <h3>从一个业务问题开始</h3>
+            <p>例如：按月份统计销售额，比较本月和上月的变化。</p>
+          </div>
+        </div>
+        <div id="clarification-banner" class="clarification-banner hidden" role="status"></div>
+        <form id="chat-form" class="chat-form">
+          <label class="sr-only" for="chat-input">输入业务问题</label>
+          <textarea id="chat-input" rows="3" maxlength="4000" placeholder="请先选择已就绪的数据集" disabled></textarea>
+          <div class="chat-form-footer">
+            <span id="chat-hint" class="muted">回答、表格、图表和证据来自同一次确定性分析。</span>
+            <div class="chat-actions">
+              <button id="cancel-analysis" class="button button-warning hidden" type="button">取消分析</button>
+              <button id="send-question" class="button button-primary" type="submit" disabled>开始分析</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel right-panel" aria-label="数据质量、语义和证据">
+        <div class="tabs" role="tablist" aria-label="工作台信息">
+          <button class="tab active" data-tab="quality" role="tab" aria-selected="true" type="button"><span class="tab-icon" aria-hidden="true">◒</span>质量</button>
+          <button class="tab" data-tab="semantics" role="tab" aria-selected="false" type="button"><span class="tab-icon" aria-hidden="true">◌</span>语义</button>
+          <button class="tab" data-tab="evidence" role="tab" aria-selected="false" type="button"><span class="tab-icon" aria-hidden="true">▤</span>证据</button>
+          <button class="tab" data-tab="joins" role="tab" aria-selected="false" type="button"><span class="tab-icon" aria-hidden="true">⌘</span>联表</button>
+          <button class="tab" data-tab="knowledge" role="tab" aria-selected="false" type="button"><span class="tab-icon" aria-hidden="true">▧</span>知识</button>
+        </div>
+        <div id="tab-quality" class="tab-panel active" role="tabpanel">
+          <div class="section-heading"><h2>数据质量</h2><button id="refresh-quality" class="icon-button" type="button" title="刷新质量信息" aria-label="刷新质量信息">↻</button></div>
+          <div id="quality-content" class="tab-content empty-state compact">选择数据集查看质量报告</div>
+        </div>
+        <div id="tab-semantics" class="tab-panel" role="tabpanel" hidden>
+          <div class="section-heading"><h2>语义绑定</h2><button id="refresh-semantics" class="icon-button" type="button" title="刷新语义绑定" aria-label="刷新语义绑定">↻</button></div>
+          <div id="semantics-content" class="tab-content empty-state compact">选择数据集查看语义绑定</div>
+        </div>
+        <div id="tab-evidence" class="tab-panel" role="tabpanel" hidden>
+          <div class="section-heading"><h2>分析证据</h2><button id="refresh-analyses" class="icon-button" type="button" title="刷新分析记录" aria-label="刷新分析记录">↻</button></div>
+          <div id="evidence-content" class="tab-content empty-state compact">完成一次分析后显示Evidence</div>
+        </div>
+        <div id="tab-joins" class="tab-panel" role="tabpanel" hidden>
+          <div class="section-heading"><h2>安全联表</h2></div>
+          <div id="join-content" class="tab-content empty-state compact">需要同一任务中至少两个就绪数据集</div>
+        </div>
+        <div id="tab-knowledge" class="tab-panel" role="tabpanel" hidden>
+          <div class="section-heading"><h2>任务知识</h2><label id="knowledge-upload-label" class="button button-secondary button-small disabled" for="knowledge-upload">上传</label><input id="knowledge-upload" class="sr-only" type="file" accept=".md,.txt,.markdown"></div>
+          <div id="knowledge-content" class="tab-content empty-state compact">仅允许上传非敏感Markdown或TXT文档</div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="vendor/echarts.min.js"></script>
+  <script src="vendor/marked.umd.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ExcelMind v2 · 任务与数据集</title>
+  <style>
+    :root { font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif; color: #1f2937; background: #f5f7fb; }
+    body { max-width: 1180px; margin: 0 auto; padding: 24px; }
+    h1 { margin-top: 0; } .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    section { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px #1111; }
+    label { display: block; margin: 8px 0 4px; font-size: 13px; color: #4b5563; }
+    input, select, button { box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+    input, select { width: 100%; } button { cursor: pointer; background: #2563eb; color: white; border: 0; margin: 8px 4px 0 0; }
+    button.secondary { background: #64748b; } button.danger { background: #dc2626; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f8fafc; padding: 10px; border-radius: 6px; max-height: 260px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; } th, td { border-bottom: 1px solid #e5e7eb; padding: 6px; text-align: left; }
+    .wide { grid-column: 1 / -1; } .muted { color: #64748b; font-size: 13px; } .error { color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <h1>ExcelMind v2 · 任务与数据集</h1>
+  <p class="muted">阶段1工作台：创建任务、上传文件、查看质量和确认语义绑定。当前不提供问数回答。</p>
+  <div id="message" role="status" class="muted"></div>
+  <div class="grid">
+    <section>
+      <h2>任务</h2>
+      <label for="task-name">任务名称</label>
+      <input id="task-name" maxlength="100" placeholder="例如：一季度经营数据">
+      <button id="create-task">创建任务</button>
+      <label for="task-select">当前任务</label>
+      <select id="task-select"></select>
+      <button id="delete-task" class="danger">删除当前任务</button>
+    </section>
+    <section>
+      <h2>上传与导入</h2>
+      <input id="file" type="file" accept=".xlsx,.csv">
+      <button id="inspect-upload">检查上传</button>
+      <label for="object-select">Sheet / CSV对象</label>
+      <select id="object-select"></select>
+      <label for="encoding">CSV编码（有歧义时填写）</label>
+      <input id="encoding" placeholder="utf-8-sig">
+      <label for="delimiter">CSV分隔符（有歧义时填写）</label>
+      <input id="delimiter" placeholder=",">
+      <button id="create-dataset">创建Dataset</button>
+      <pre id="inspection">尚未检查上传</pre>
+    </section>
+    <section class="wide">
+      <h2>Dataset与数据质量</h2>
+      <label for="dataset-select">当前Dataset</label>
+      <select id="dataset-select"></select>
+      <button id="refresh-dataset" class="secondary">刷新</button>
+      <pre id="profile">请选择Dataset</pre>
+      <pre id="preview">请选择Dataset</pre>
+    </section>
+    <section class="wide">
+      <h2>语义绑定</h2>
+      <div id="bindings">请选择Dataset</div>
+    </section>
+  </div>
+  <script>
+    const state = { taskId: null, upload: null, datasetId: null };
+    const $ = (id) => document.getElementById(id);
+    const show = (text, error = false) => { $('message').textContent = text; $('message').className = error ? 'error' : 'muted'; };
+    async function request(url, options = {}) {
+      const response = await fetch(url, options);
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message || '请求失败');
+      return body;
+    }
+    function selectedTask() { return $('task-select').value || state.taskId; }
+    async function refreshTasks() {
+      const body = await request('/api/v2/tasks'); const select = $('task-select');
+      select.textContent = ''; body.tasks.forEach((task) => { const option = document.createElement('option'); option.value = task.task_id; option.textContent = `${task.name} (${task.task_id.slice(0, 8)})`; select.append(option); });
+      state.taskId = select.value || null;
+      await refreshDatasets();
+    }
+    async function refreshDatasets() {
+      if (!selectedTask()) return; const body = await request(`/api/v2/tasks/${selectedTask()}/datasets`); const select = $('dataset-select'); select.textContent = '';
+      body.datasets.forEach((dataset) => { const option = document.createElement('option'); option.value = dataset.dataset_id; option.textContent = `${dataset.display_name} · ${dataset.status}`; select.append(option); });
+      state.datasetId = select.value || null; await refreshDataset();
+    }
+    async function refreshDataset() {
+      if (!selectedTask() || !state.datasetId) { $('profile').textContent = '请选择Dataset'; $('preview').textContent = '请选择Dataset'; $('bindings').textContent = '请选择Dataset'; return; }
+      const base = `/api/v2/tasks/${selectedTask()}/datasets/${state.datasetId}`;
+      const [profile, preview, binding] = await Promise.all([request(`${base}/profile`), request(`${base}/preview`), request(`/api/v2/tasks/${selectedTask()}/semantic-bindings?dataset_id=${encodeURIComponent(state.datasetId)}`)]);
+      $('profile').textContent = JSON.stringify(profile, null, 2); $('preview').textContent = JSON.stringify(preview, null, 2); renderBindings(binding.bindings);
+    }
+    function renderBindings(bindings) {
+      const host = $('bindings'); host.textContent = ''; const table = document.createElement('table'); const head = document.createElement('tr');
+      ['语义成员', '状态', '候选字段', '操作'].forEach((text) => { const th = document.createElement('th'); th.textContent = text; head.append(th); }); table.append(head);
+      bindings.forEach((binding) => { const row = document.createElement('tr'); [binding.semantic_member_id, binding.status, binding.candidate_field_ids.join(', ') || '无'].forEach((text) => { const td = document.createElement('td'); td.textContent = text; row.append(td); }); const action = document.createElement('td');
+        if (binding.status === 'pending') { const input = document.createElement('input'); input.placeholder = 'physical_field_id'; input.value = binding.candidate_field_ids[0] || ''; const button = document.createElement('button'); button.textContent = '确认'; button.onclick = async () => { try { await request(`/api/v2/tasks/${selectedTask()}/datasets/${state.datasetId}/semantic-binding-decisions`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({binding_id: binding.binding_id, physical_field_id: input.value, confirm: true}) }); show('语义绑定已确认'); await refreshDataset(); } catch (error) { show(error.message, true); } }; action.append(input, button); } else { action.textContent = '无需操作'; } row.append(action); table.append(row); }); host.append(table);
+    }
+    $('create-task').onclick = async () => { try { await request('/api/v2/tasks', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: $('task-name').value || null})}); show('任务已创建'); await refreshTasks(); } catch (error) { show(error.message, true); } };
+    $('delete-task').onclick = async () => { try { await request(`/api/v2/tasks/${selectedTask()}`, {method: 'DELETE'}); state.taskId = null; show('任务已删除'); await refreshTasks(); } catch (error) { show(error.message, true); } };
+    $('task-select').onchange = async () => { state.taskId = $('task-select').value; await refreshDatasets(); };
+    $('dataset-select').onchange = async () => { state.datasetId = $('dataset-select').value; await refreshDataset(); };
+    $('refresh-dataset').onclick = refreshDataset;
+    $('inspect-upload').onclick = async () => { try { if (!selectedTask()) throw new Error('请先创建任务'); const file = $('file').files[0]; if (!file) throw new Error('请选择文件'); const form = new FormData(); form.append('file', file); state.upload = await request(`/api/v2/tasks/${selectedTask()}/uploads`, {method: 'POST', body: form}); $('inspection').textContent = JSON.stringify(state.upload, null, 2); const select = $('object-select'); select.textContent = ''; state.upload.objects.forEach((object) => { const option = document.createElement('option'); option.value = object.name; option.textContent = object.name; select.append(option); }); show('上传检查完成'); } catch (error) { show(error.message, true); } };
+    $('create-dataset').onclick = async () => { try { if (!state.upload) throw new Error('请先检查上传'); const body = {upload_id: state.upload.upload_id, object_name: $('object-select').value || null, encoding: $('encoding').value || null, delimiter: $('delimiter').value || null}; const dataset = await request(`/api/v2/tasks/${selectedTask()}/datasets`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}); state.datasetId = dataset.dataset_id; show(dataset.status === 'blocked' ? 'Dataset已创建，但需要确认规范化' : 'Dataset已创建'); await refreshDatasets(); } catch (error) { show(error.message, true); } };
+    refreshTasks().catch((error) => show(error.message, true));
+  </script>
+</body>
+</html>

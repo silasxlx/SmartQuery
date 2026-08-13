@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# uv
+.uv/
+.uv-cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+*.bak
+.runtime/
+.ruff_cache/
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Uploaded Excel files (临时文件)
+*.xlsx.tmp
+temp/
+tmp/
+
+# Config with secrets (包含敏感信息的配置)
+config.yaml
+
+# Vector database (知识库向量存储)
+.vector_db/
+
+# Local-only legacy sample assets
+/data/
+/knowledge/
+/docs/演示视频.mp4
+
+# Internal design documents and visual QA assets
+/docs/specs/
+/docs/REFACTOR_UPGRADE_SPEC.md
+/docs/BLUEPRINT_v2.md
+/tests/e2e/visual_baseline/
+
+# Local compatibility and design artifacts excluded from the public package
+/main.py
+/excel_agent/
+/mermaid-diagram.svg

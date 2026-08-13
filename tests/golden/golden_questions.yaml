@@ -1,0 +1,33 @@
+version: "0.1"
+dataset: "tests/fixtures/sample.csv"
+cases:
+  - {id: G01, category: upload_schema, question: "识别日期和金额字段", expected: "Schema含date、amount", evidence: [dataset_id, physical_schema]}
+  - {id: G02, category: upload_schema, question: "统计每列空值率", expected: "空值率可复现", evidence: [dataset_id, physical_schema]}
+  - {id: G03, category: upload_normalization, question: "将date规范为日期", expected: "日期类型正确", evidence: [dataset_id, transformation_log]}
+  - {id: G04, category: upload_normalization, question: "检查amount数值类型", expected: "amount为数值", evidence: [dataset_id, physical_schema]}
+  - {id: G05, category: filter, question: "查询A网点的订单", expected: "22", evidence: [query_plan, row_count, result]}
+  - {id: G06, category: filter, question: "查询2024年2月订单", expected: "23", evidence: [query_plan, time_range, result]}
+  - {id: G07, category: filter, question: "金额大于100的记录", expected: "2行", evidence: [query_plan, row_count, result]}
+  - {id: G08, category: filter, question: "列出B网点记录", expected: "2行", evidence: [query_plan, result]}
+  - {id: G09, category: aggregate, question: "订单金额总和是多少", expected: "450", evidence: [metric_definition, intermediate_values, result]}
+  - {id: G10, category: aggregate, question: "订单数总和是多少", expected: "45", evidence: [metric_definition, result]}
+  - {id: G11, category: aggregate, question: "平均订单金额是多少", expected: "112.5", evidence: [metric_definition, result]}
+  - {id: G12, category: aggregate, question: "最小订单金额是多少", expected: "80", evidence: [metric_definition, result]}
+  - {id: G13, category: group, question: "按网点汇总金额", expected: "A=220,B=230", evidence: [dimension, metric_definition, result]}
+  - {id: G14, category: group, question: "按网点汇总订单数", expected: "A=22,B=23", evidence: [dimension, result]}
+  - {id: G15, category: group, question: "金额最高网点", expected: "B", evidence: [sort, limit, result]}
+  - {id: G16, category: group, question: "订单数最低网点", expected: "A", evidence: [sort, limit, result]}
+  - {id: G17, category: trend, question: "按月汇总金额", expected: "1月220,2月230", evidence: [time_grain, result]}
+  - {id: G18, category: trend, question: "按月汇总订单数", expected: "1月22,2月23", evidence: [time_grain, result]}
+  - {id: G19, category: comparison, question: "2月比1月金额变化", expected: "增加10", evidence: [time_range, intermediate_values, result]}
+  - {id: G20, category: comparison, question: "2月比1月金额增幅", expected: "约4.55%", evidence: [metric_definition, result]}
+  - {id: G21, category: ratio, question: "A网点金额占比", expected: "约48.89%", evidence: [metric_definition, numerator, denominator, result]}
+  - {id: G22, category: ratio, question: "B网点金额占比", expected: "约51.11%", evidence: [metric_definition, numerator, denominator, result]}
+  - {id: G23, category: semantic_alias, question: "营业额是多少", expected: "映射订单金额", evidence: [semantic_model_version, binding]}
+  - {id: G24, category: semantic_alias, question: "门店维度排行", expected: "branch映射网点", evidence: [semantic_model_version, binding]}
+  - {id: G25, category: metric_formula, question: "确认客单价=金额/订单数", expected: "等待确认", evidence: [pending_clarification, formula]}
+  - {id: G26, category: grain, question: "按日查看金额", expected: "4个日期粒度", evidence: [time_grain, result]}
+  - {id: G27, category: join, question: "两表关联后检查重复膨胀", expected: "异常时拦截", evidence: [join_keys, cardinality, warnings]}
+  - {id: G28, category: rag, question: "根据口径解释订单金额", expected: "引用任务知识但不改指标", evidence: [knowledge_source, metric_definition]}
+  - {id: G29, category: chart, question: "生成网点金额柱状图", expected: "图表数字与Evidence一致", evidence: [chart_spec, result]}
+  - {id: G30, category: error, question: "查询不存在的客户字段", expected: "结构化字段错误", evidence: [error_code, request_id]}
