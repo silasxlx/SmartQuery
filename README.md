@@ -9,26 +9,30 @@ SmartQuery lets users upload XLSX or CSV files, ask business questions in natura
 ![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-1f6feb)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-v0.2.0--alpha.1-orange)
+[![CI](https://github.com/silasxlx/SmartQuery/actions/workflows/ci.yml/badge.svg)](https://github.com/silasxlx/SmartQuery/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/silasxlx/SmartQuery?include_prereleases&label=release)](https://github.com/silasxlx/SmartQuery/releases)
 
 > 当前版本是面向演示和开发验证的 Alpha 版本，不建议直接用于生产环境或处理敏感数据。
 
+## 工程验证结果
+
+- 111 项自动化测试通过，代码覆盖率 86%。
+- QueryPlan 只引用已确认的语义概念，不接受物理字段直出。
+- pandas 确定性执行，Answer、表格、图表和 AnalysisEvidence 使用同一结果。
+- 上传校验、任务隔离、受限指标公式和秘密扫描均纳入测试。
+
 ## 页面截图
 
-### 创建任务
-
-![空任务工作台](./docs/screenshots/01-empty-task.png)
-
-### Dataset 就绪
-
-![Dataset 就绪](./docs/screenshots/02-dataset-ready.png)
-
-### 分析完成
-
-![分析完成](./docs/screenshots/03-analysis-completed.png)
-
-### 等待业务澄清
-
-![等待业务澄清](./docs/screenshots/04-awaiting-clarification.png)
+<table>
+<tr>
+<td align="center"><img src="./docs/screenshots/01-empty-task.png" alt="空任务工作台" width="100%" /><br /><sub>创建任务</sub></td>
+<td align="center"><img src="./docs/screenshots/02-dataset-ready.png" alt="Dataset 就绪" width="100%" /><br /><sub>Dataset 就绪</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="./docs/screenshots/03-analysis-completed.png" alt="分析完成" width="100%" /><br /><sub>分析完成</sub></td>
+<td align="center"><img src="./docs/screenshots/04-awaiting-clarification.png" alt="等待业务澄清" width="100%" /><br /><sub>等待业务澄清</sub></td>
+</tr>
+</table>
 
 ## 解决的问题
 
